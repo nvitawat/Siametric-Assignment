@@ -1,0 +1,347 @@
+---
+title: "Siametric Assignment"
+author: "Vitawat Ngammuangpak"
+date: "7/31/2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+# Data
+```{r}
+library(dplyr)
+# Set working directory
+setwd("/Users/vitawat/desktop/Rdata/siametrics_asg2018/")
+# Read files
+performance  <- read.csv("performance.csv", head = T)
+performance_c <- read.csv("performance_c.csv", head = T)
+absence <- read.csv("absence.csv", head = T)
+department <- read.csv("department.csv", head = T)
+# Change column name
+colnames(department)[1] <- "person_id"
+str(performance)
+str(performance_c)
+str(absence)
+str(department)
+```
+# Merge Data
+Merge all files together by person_id, id_s_fr, and year. 
+
+```{r}
+# Make key index
+M1 <- bind_rows(performance[,1:2],performance_c[,1:2], absence[,1:2], department[,1:2])
+# Take duplicate person_id and year off 
+Mtotal <- M1[!duplicated(M1[,1:2]),]       # Key index
+# Before merge -> add varaible to indicate the source data
+performance$performance <- 1
+performance_c$performance_c <- 1
+absence$absence <- 1
+department$department <- 1
+# Merge files - left_join by "person_id" and "year"
+Mtotal  <- Mtotal %>%
+  left_join(performance, by = c("person_id", "year")) %>%  
+  left_join(performance_c, by = c("person_id", "year")) %>%
+  left_join(absence, by = c("person_id", "year")) %>%
+  left_join(department, by = c("person_id", "year")) 
+str(Mtotal)
+nrow(Mtotal)
+nrow(subset(Mtotal,performance == 1))
+nrow(subset(Mtotal,performance_c == 1))
+nrow(subset(Mtotal,absence == 1))
+nrow(subset(Mtotal,department == 1))
+# write file
+write.csv(Mtotal, file="panal.csv", row.names = T)
+```
+# Q1 : Fill every area in the below Venn diagram with the number of unique people.
+## 1. People in each data file
+check person_id appear in each data file
+
+```{r}
+Uperf <- performance[!duplicated(performance[,1]),] # take duplicate id off
+Uperfc <- performance_c[!duplicated(performance_c[,1]),] # take duplicate id off
+Uabsence  <- absence[!duplicated(absence[,1]),] # take duplicate id off
+Udepartment <-department[!duplicated(department[,1]),] # take duplicate id off
+nrow(Uperf)
+nrow(Uperfc)
+nrow(Uabsence)
+nrow(Udepartment)
+```
+## 2. Total people (universe)
+```{r}
+# Prepare data
+M2 <- Mtotal[!duplicated(Mtotal[,1]),]
+M3 <- as.data.frame(M2$person_id)
+M3$performance <- M2$performance
+M3$performance_c <- M2$performance_c
+M3$absence <- M2$absence
+M3$department <- M2$department
+nrow(M3)
+```
+## 3. Unique people in each area
+
+universe = 6729
+
+A = 1064
+
+B = 58
+
+C = 0
+
+D = 0
+
+E = 0
+
+F = 810
+
+G = 1
+
+H = 2401
+
+I = 62
+
+J = 30
+
+K = 1736
+
+L = 535
+
+M = 1
+
+N = 31
+
+O = 0 
+
+A+B+C+D+E+F+G+H+I+J+K+L+M+N+O = 6729 = universe
+
+## Find A <- Only appear in performance
+```{r}
+M3$hcheck <- 0
+M3$check[M3$performance == 1 & is.na(M3$performance_c) & is.na(M3$absence)  & is.na(M3$department)] <- 1
+sum(na.omit(M3$check))
+```
+## Find B <- Only appear in performance and performance_c
+```{r}
+M3$check <- 0
+M3$check[M3$performance == 1 & M3$performance_c == 1 & is.na(M3$absence)  & is.na(M3$department)] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find C <- Only appear in performance_c
+```{r}
+M3$check <- 0
+M3$check[is.na(M3$performance) & M3$performance_c == 1 & is.na(M3$absence)  & is.na(M3$department)] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find D <- Only appear in performance_c and absence
+```{r}
+M3$check <- 0
+M3$check[is.na(M3$performance) & M3$performance_c == 1 & M3$absence == 1  & is.na(M3$department)] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find E <- Only appear in performance_c and absence and department
+```{r}
+M3$check <- 0
+M3$check[is.na(M3$performance) & M3$performance_c == 1 & M3$absence == 1  & M3$department == 1] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find F <- Only appear in absence and department***** not in the answer
+```{r}
+M3$check <- 0
+M3$check[is.na(M3$performance) & is.na(M3$performance_c) & M3$absence == 1  & M3$department == 1] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find G <- Only appear in performance and performance_c and department
+```{r}
+M3$check <- 0
+M3$check[M3$performance == 1 & M3$performance_c == 1 & is.na(M3$absence)  & M3$department == 1] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find H <- appear in performance and performance_c and absence and department
+```{r}
+M3$check <- 0
+M3$check[M3$performance == 1 & M3$performance_c == 1 & M3$absence == 1 & M3$department == 1] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find I <- Only appear in performance and performance_c and absence
+```{r}
+M3$check <- 0
+M3$check[M3$performance == 1 & M3$performance_c == 1 & M3$absence == 1 & is.na(M3$department)] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find J <- Only appear in performance and absence
+```{r}
+M3$check <- 0
+M3$check[M3$performance == 1 & is.na(M3$performance_c) & M3$absence == 1 & is.na(M3$department)] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find K <- Only appear in absence
+```{r}
+M3$check <- 0
+M3$check[is.na(M3$performance) & is.na(M3$performance_c) & M3$absence == 1 & is.na(M3$department)] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find L <- Only appear in performance and absence and department
+```{r}
+M3$check <- 0
+M3$check[M3$performance == 1 & is.na(M3$performance_c) & M3$absence == 1 & M3$department== 1] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find M <- Only appear in performance and department
+```{r}
+M3$check <- 0
+M3$check[M3$performance == 1 & is.na(M3$performance_c) & is.na(M3$absence) & M3$department== 1] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find N <- Only appear in department
+```{r}
+M3$check <- 0
+M3$check[is.na(M3$performance) & is.na(M3$performance_c) & is.na(M3$absence) & M3$department== 1] <- 1
+sum(na.omit(M3$check))
+``` 
+## Find O <- Only appear in performance_c and department
+```{r}
+M3$check <- 0
+M3$check[is.na(M3$performance) & M3$performance_c == 1 & is.na(M3$absence) & M3$department== 1] <- 1
+sum(na.omit(M3$check))
+``` 
+# Q2 : Are there any features we should worry about? Check for missingness and other anomalies. Report the top three issues with the data I should worry about.
+
+1. perf_a, perf_b,and perF_c : There are a lot of missing data. It may be get a problem with the total score of each person.
+
+2. All performance score is both positive and negative. Score probabilities derived from standardized.  
+
+3. The data in each row is the data of each person in each period. Be careful when use, must to understand the data.
+
+```{r}
+summary(Mtotal)
+```
+# Q3: Create a new variable for a person’s average lifetime performance score (pick any of the three scores we have). Call this new variable, lperf. What is the average of lperf among female employees? 
+
+1. Select female = 1 from merged file 
+
+2. Select perf_c to create mew variable <- lperf
+
+3. Find person’s average lifetime performance score = lperf of each people
+
+4. Find mean of lperf = the average of lperf among female employees = 0.009869174
+
+```{r}
+# Find person_id that female == 1 from Mtotal
+M1 <- Mtotal
+M1 <- M1[!(M1$female == 0 | is.na(M1$female)),]   # select only female
+# Find lifetime performance score for each person (use perf_c)
+M2 <- aggregate(perf_c ~ person_id, M1, mean)
+# Find the average of lperf among female employees 
+mean(M2$perf_c)
+```     
+# Q4: Transform the data from the current long format (each row is for each person-year record so there’ll be many rows per one person) into the wide format (each row is for each person). Save this as wide.csv.
+
+1. Split data file by year : 2012-2017 and 9999***(keep to check with previous file)
+
+2. Merge year file by column use person_id as key index
+
+3. Save to wide.csv  
+
+```{r}
+# Check year
+table(Mtotal$year)
+# Cut performance, performan_c, absence, department
+Stotal <- Mtotal
+Stotal$performance <- NULL
+Stotal$performance_c <- NULL
+Stotal$absence <- NULL
+Stotal$department <- NULL
+Stotal$lperf <- NULL
+# Create sub file for each year
+y2012 <- Stotal[0,]
+y2013 <- Stotal[0,]
+y2014 <- Stotal[0,]
+y2015 <- Stotal[0,]
+y2016 <- Stotal[0,]
+y2017 <- Stotal[0,]
+y9999 <- Stotal[0,]
+# Start to split file
+i  <- 1
+for (i in 1:nrow(Stotal)) {
+  if(Stotal$year[i] == 2012){
+    y2012 <- rbind(y2012,Stotal[i,])
+  }
+}
+i  <- 1
+for (i in 1:nrow(Stotal)) {
+  if(Stotal$year[i] == 2013){
+    y2013 <- rbind(y2013,Stotal[i,])
+  }
+}
+i  <- 1
+for (i in 1:nrow(Stotal)) {
+  if(Stotal$year[i] == 2014){
+    y2014 <- rbind(y2014,Stotal[i,])
+  }
+}
+i  <- 1
+for (i in 1:nrow(Stotal)) {
+  if(Stotal$year[i] == 2015){
+    y2015 <- rbind(y2015,Stotal[i,])
+  }
+}
+i  <- 1
+for (i in 1:nrow(Stotal)) {
+  if(Stotal$year[i] == 2016){
+    y2016 <- rbind(y2016,Stotal[i,])
+  }
+}
+i  <- 1
+for (i in 1:nrow(Stotal)) {
+  if(Stotal$year[i] == 2017){
+    y2017 <- rbind(y2017,Stotal[i,])
+  }
+}
+i  <- 1
+for (i in 1:nrow(Stotal)) {
+  if(Stotal$year[i] == 9999){
+    y9999 <- rbind(y9999,Stotal[i,])
+  }
+}
+# Maker person_id as key index
+Wtotal <- as.data.frame(M3[,1])
+colnames(Wtotal)[1] <- "person_id"
+# Merge
+Wtotal  <- Wtotal %>%
+  left_join(y2012, by = "person_id") %>%  
+  left_join(y2013, by = "person_id") %>%  
+  left_join(y2014, by = "person_id") %>%  
+  left_join(y2015, by = "person_id") %>%  
+  left_join(y2016, by = "person_id") %>%  
+  left_join(y2017, by = "person_id") %>%  
+  left_join(y9999, by = "person_id")  
+str(Wtotal)
+# write file
+write.csv(Wtotal, file="wide.csv", row.names = T)
+```  
+# Q5 (BONUS): Go back to the long format file, panel.csv. Calculate the rolling average performance score (pick any of the three) for all previous years up until the year for that record. For example, if that row is year =2014, calculate this average using performance score from all years <=2014. If there are missing scores in some year(s) in between, use the latest available rolling average. Call this variable, rperf. What’s the average rperf among male employees in year 2015?
+Rolling score year X is average performance score from started year to year X. For this data set, Rolling score year 2015 is average performance score from 2012 to 2015.
+
+1. Use perf_c to calculate rperf 
+
+2. Use wide.csv
+
+3. Select people who is male
+
+4. Find rolling score 2015 (anerage perf_c from 2012-2015)
+
+5. Average of rolling score is the average rperf among male employees in year 2015 = -0.2539987
+
+```{r}
+# Select male from Wtota,(wide.csv) (1 = female, 0 = male)
+M4 <- Wtotal[!(Wtotal$female.x == 1 | is.na(Wtotal$female.x)),]   # select only male
+M5 <- as.data.frame(M4[,1])
+M5$perf_c_2012 <- M4$perf_c.x
+M5$perf_c_2013 <- M4$perf_c.y
+M5$perf_c_2014 <- M4$perf_c.x.x
+M5$perf_c_2015 <- M4$perf_c.y.y
+# Calculate rperf for 2015
+M5$rperf <- rowMeans(M5[-1], na.rm = TRUE)
+M5$rperf[is.nan(M5$rperf)] <- NA
+mean(M5$rperf, na.rm = TRUE)
+```
+
+
